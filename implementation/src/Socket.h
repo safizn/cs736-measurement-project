@@ -1,5 +1,4 @@
-#ifndef SOCKET_H
-#define SOCKET_H
+#pragma once
 
 #include <string>
 #include <iostream>
@@ -7,6 +6,5 @@
 
 class Socket : IPC {};
 
-#endif // SOCKET_H
 
 

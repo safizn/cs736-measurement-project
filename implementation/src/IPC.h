@@ -1,6 +1,4 @@
-
-#ifndef IPC_H
-#define IPC_H
+#pragma once
 
 #include <string>
 #include <iostream>
@@ -10,5 +8,3 @@
 class IPC {
   virtual int exchange() = 0;
 };
-
-#endif // IPC_H

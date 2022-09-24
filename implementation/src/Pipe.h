@@ -1,5 +1,4 @@
-#ifndef PIPE_H
-#define PIPE_H
+#pragma once
 
 #include <string>
 #include <iostream>
@@ -7,4 +6,3 @@
 
 class Pipe : IPC {};
 
-#endif // PIPE_H

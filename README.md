@@ -9,3 +9,5 @@
 - Socket (TCP/IP)
 - Shared mem channel
 
+# Resources: 
+- https://medium.com/swlh/reliable-performance-testing-in-c-1df7a3ba398

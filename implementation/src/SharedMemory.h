@@ -1,5 +1,4 @@
-#ifndef SHAREDMEMORY_H
-#define SHAREDMEMORY_H
+#pragma once
 
 #include <string>
 #include <iostream>
@@ -7,4 +6,4 @@
 
 class SharedMemory : IPC {};
 
-#endif // SHAREDMEMORY_H
+
