@@ -1,9 +1,18 @@
 #include <iostream>
-import Pipe;
-import Socket;
-import Shared_memory;
+#include <cassert>
+#include "utility.cpp"
+#include "Pipe.h"
+#include "Socket.h"
+#include "SharedMemory.h"
 
 int main(int, char**) {
+  assert(checkCpp20Support() == 0); // check if compiler supports C++20 features
+
+  std::cout << " Test " << std::endl;
+
+
+/*
+
   // initialize class instances
   Pipe i1{};
   Socket i2{};
@@ -28,6 +37,7 @@ int main(int, char**) {
      i3.exchange(data); // will transfer data between processes using memory
      //----- end timer
   }
+*/
 
   
 }
