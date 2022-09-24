@@ -14,7 +14,7 @@ int main(int, char**) {
   std::cout << " Test " << std::endl;
 
   clockType start = std::chrono::steady_clock::now();
-  utility::dummyLoop();
+  utility::dummyLoop(1000000);
   clockType end = std::chrono::steady_clock::now();
   
   // Derive the duration
