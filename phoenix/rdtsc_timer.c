@@ -1,6 +1,4 @@
 
-#define _GNU_SOURCE
-
 #include "rdtsc_timer.h"
 #include <stdlib.h>
 #include <stdio.h>
