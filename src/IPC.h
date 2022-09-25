@@ -4,10 +4,11 @@
 #include <iostream>
 
 // interface of IPC mechanisms
+template<typename T> 
 class IPC {
 public:
-  IPC() = default;
-  virtual ~IPC();
+  // IPC() = default;
+  // ~IPC();
   
-  virtual int exchange(unsigned int) = 0;
+  virtual int exchange(T) = 0;
 };

@@ -14,13 +14,14 @@ int main(int, char**) {
   assert(utility::checkCpp20Support() == 0); // check if compiler supports C++20 features
 
   // transfer data
-  unsigned int data{0b101010101010101010010};  // in binary
+  unsigned int data{0b111111111111111111111111111};  // in binary
   constexpr std::size_t data_size = std::numeric_limits<unsigned int>::digits;
+  printf("Number of bytes in data = %u \n", sizeof(data));
 
   // instances
-  Pipe i1{data};
-  Socket i2;
-  SharedMemory i3;
+  Pipe<decltype(data)> i1{data, "pipe instance A"};
+  Socket<decltype(data)> i2{data};
+  SharedMemory<decltype(data)> i3{data};
 
   clockType start = std::chrono::steady_clock::now();
   i1.exchange(1);
@@ -33,8 +34,4 @@ int main(int, char**) {
   std::chrono::duration<unsigned long long, std::milli> int_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
   printf("\nTime in milliseconds: %d or %lld \n", fp_ms, int_ms);
-
-  
-  printf("\ni1 instantiation check: "); 
-  cout <<  std::bitset<32>(i1.get_receiveData()).to_string() << endl;
 }

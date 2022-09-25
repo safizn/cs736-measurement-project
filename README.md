@@ -13,3 +13,6 @@
 
 # Resources: 
 - https://medium.com/swlh/reliable-performance-testing-in-c-1df7a3ba398
+- https://mazzo.li/posts/fast-pipes.html
+- https://brandonwamboldt.ca/how-linux-pipes-work-under-the-hood-1518/
+- 

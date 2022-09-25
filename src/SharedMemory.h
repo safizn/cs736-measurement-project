@@ -5,12 +5,14 @@
 #include "IPC.h"
 #include "utility.cpp"
 
-class SharedMemory {
+template<typename T> 
+class SharedMemory : public IPC<T> {
 public: 
-  SharedMemory() {};
-  ~SharedMemory() {};
+  SharedMemory() = default;
+  SharedMemory(T data) {}
+  // ~SharedMemory() {};
 
-  int exchange(unsigned int data) {
+  virtual int exchange(T data) override{
     utility::dummyLoop(1000000);
     return 0;
   }

@@ -5,12 +5,14 @@
 #include "IPC.h"
 #include "utility.cpp"
 
-class Socket {
+template<typename T> 
+class Socket : public IPC<T> {
 public: 
-  Socket() {}
-  ~Socket() {}
+  Socket() = default;
+  Socket(T data) {}
+  // ~Socket() {}
 
-  int exchange(unsigned int data) {
+  virtual int exchange(T data) override {
     utility::dummyLoop(1000000);
     return 0;
   }
