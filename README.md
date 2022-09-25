@@ -16,3 +16,5 @@
 - https://mazzo.li/posts/fast-pipes.html
 - https://brandonwamboldt.ca/how-linux-pipes-work-under-the-hood-1518/
 - https://stackoverflow.com/questions/11563963/how-to-write-a-large-buffer-into-a-binary-file-in-c-fast
+- https://www.netmeister.org/blog/ipcbufs.html
+- https://biendltb.github.io/tech/inter-process-communication-ipc-in-cpp/

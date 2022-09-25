@@ -8,17 +8,18 @@
 #include <unistd.h> 
 #include <fcntl.h> // file control options - O_NONBLOCK
 
+#include "Buffer.h"
 #include "IPC.h"
 #include "utility.cpp"
 
 using namespace std;
 
 template<typename T = unsigned int, std::size_t data_size = std::numeric_limits<T>::digits> 
-class Pipe : public IPC<T> {
+class PipeStatic : public IPC<T> {
 public:
-  Pipe() = default;
-  Pipe(T data) : Pipe(data) {}
-  Pipe(T data, std::string label = "") : sendData(data), label(label) {
+  PipeStatic() = default;
+  PipeStatic(T data) : PipeStatic(data) {}
+  PipeStatic(T data, std::string label = "") : sendData(data), label(label) {
     // creates one-way communication channel (fd[1] write; fd[0] read)
     // TODO: consider flag 0 | O_NONBLOCK
     assert(pipe2(this->fd, 0 ) != -1); // 0 flag = same as pipe();
@@ -38,7 +39,7 @@ public:
     }
   }
 
-  // ~Pipe();
+  // ~PipeStatic();
 
   // exchange/send data
   virtual int operator()(T param = 0) override { // Parent begin writing data to child
@@ -69,31 +70,8 @@ public:
   std::string label {""}; // instance label
   int fd[2]; // file descriptor to pipe
   pid_t pid_child{}; // process id
-  T sendData{0}; // data to transfer (for writing process)
-  T receiveData{0}; // data received (for reading process)
+  T sendData; // data to transfer (for writing process)
+  T receiveData; // data received (for reading process)
 };
-
-
-
-// Template specialization for string data
-// TODO: Data buffer to pass
-template <>
-class Pipe <char*>
-{
-public:
-	Pipe(){
-    }
-	
-  int exchange(char* data) { 
-    /** alternatively for handling string message:
-    while (read(pipefd[0], &buf, 1) > 0)
-      write(STDOUT_FILENO, &buf, 1);
-    **/
-   return 0;
-  }  
-
-};
-
-
 
 
