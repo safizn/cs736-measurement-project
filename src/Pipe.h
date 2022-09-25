@@ -40,7 +40,7 @@ public:
 
   // ~Pipe();
 
-  virtual int exchange(T data) override { // Parent begin writing data to child
+  virtual int exchange(T param = 0) override { // Parent begin writing data to child
     assert(write(this->fd[1], &this->sendData, sizeof(T)) != -1);
     close(this->fd[1]); // reader will receive EOF
 
