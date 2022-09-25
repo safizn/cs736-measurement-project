@@ -44,14 +44,14 @@ inline void start_rdtsc_timer(struct rdtsc_timer *timer) {
 /**
  * Part of `stop_timer` implementation that doesn't need to be inlined.
  */
-static double stop_timer_ool(struct rdtsc_timer *timer, uint64_t end);
+static double stop_rdtsc_timer_ool(struct rdtsc_timer *timer, uint64_t end);
 
-inline double stop_timer(struct rdtsc_timer *timer) {
+inline double stop_rdtsc_timer(struct rdtsc_timer *timer) {
     uint64_t end = rdtsc();
-    stop_timer_ool(timer, end);
+    stop_rdtsc_timer_ool(timer, end);
 }
 
-static double stop_timer_ool(struct rdtsc_timer *timer, uint64_t end) {
+static double stop_rdtsc_timer_ool(struct rdtsc_timer *timer, uint64_t end) {
     // assert actually is running
     if (!timer->start) {
         fprintf(stderr, "stop_timer on non-running timer, aborting\n");
@@ -76,7 +76,7 @@ static double stop_timer_ool(struct rdtsc_timer *timer, uint64_t end) {
         (double) (
             // compute number of timestamps, producing a value within a few
             // orders of magnitude of 1 for tiny measurements
-            end_ts - start_ts
+            end - start
         )
         / (
             // convert from timestamps per second to timestamps per nanosecond,
@@ -85,13 +85,13 @@ static double stop_timer_ool(struct rdtsc_timer *timer, uint64_t end) {
             / (double) (1000 * 1000 * 1000)
         )
         // subtract the estimated overhead.
-        - timer->overhead_ns;
+        - timer->overhead;
 }
 
 /**
  * Procedurally estimate and initialize an rdtsc timer's `overhead` value.
  */
-static void calibrate_overhead(struct rdtsc_timer_t *timer) {
+static void calibrate_overhead(struct rdtsc_timer *timer) {
     int runs = 100000000;
     printf("calibrating timer overhead with %i runs...\n", runs);
 
@@ -102,16 +102,16 @@ static void calibrate_overhead(struct rdtsc_timer_t *timer) {
     // timer then stop it with no additional instructions in between.
     double sum = 0.0;
     for (int i = 0; i < runs; i++) {
-        start_timer(timer);
-        double elapsed = stop_timer(timer);
+        start_rdtsc_timer(timer);
+        double elapsed = stop_rdtsc_timer(timer);
         sum += elapsed;
     }
 
-    timer->overhead_ns = sum / (double) runs;
+    timer->overhead = sum / (double) runs;
 
     printf(
         "calibration complete, took %f s, timer overhead estimated at %f ns\n",
-        sum / (1000 * 1000 * 1000), timer->overhead_ns
+        sum / (1000 * 1000 * 1000), timer->overhead
     );
 }
 

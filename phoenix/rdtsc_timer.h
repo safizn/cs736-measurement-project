@@ -33,7 +33,8 @@ void start_rdtsc_timer(struct rdtsc_timer *timer);
 /**
  * Stop a running rdtsc timer, and return the elapsed nanoseconds.
  */
-double stop_timer(struct rdtsc_timer *timer);
+double stop_rdtsc_timer(struct rdtsc_timer *timer);
 
 
-#endif RDTSC_TIMER
+#endif
+
