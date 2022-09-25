@@ -62,3 +62,21 @@ public:
 
 };
 
+
+
+// Template specialization for string data
+template <>
+class Pipe <char*>
+{
+public:
+	Pipe(){
+    }
+	char* add(char* a, char* b);
+};
+
+// char* Pipe<char*>::add(char* a, char* b)
+// {
+// 	return strcat(a,b);
+// }
+
+
