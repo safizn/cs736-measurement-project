@@ -3,8 +3,11 @@
 #include <string>
 #include <iostream>
 
-
 // interface of IPC mechanisms
 class IPC {
-  virtual int exchange() = 0;
+public:
+  IPC() = default;
+  virtual ~IPC();
+  
+  virtual int exchange(unsigned int) = 0;
 };
