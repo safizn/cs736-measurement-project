@@ -52,7 +52,7 @@ inline double stop_rdtsc_timer(struct rdtsc_timer *timer) {
 static double stop_rdtsc_timer_ool(struct rdtsc_timer *timer, uint64_t end) {
     // assert actually is running
     if (!timer->start) {
-        fprintf(stderr, "stop_timer on non-running timer, aborting\n");
+        fprintf(stderr, "stop_rdtsc_timer on non-running timer, aborting\n");
         exit(1);
     }
 

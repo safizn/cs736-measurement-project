@@ -28,13 +28,12 @@ void init_rdtsc_timer(struct rdtsc_timer *timer, uint64_t cpu_hz);
 /**
  * Start an initialized rdtsc timer.
  */
-void start_rdtsc_timer(struct rdtsc_timer *timer);
+inline void start_rdtsc_timer(struct rdtsc_timer *timer);
 
 /**
  * Stop a running rdtsc timer, and return the elapsed nanoseconds.
  */
-double stop_rdtsc_timer(struct rdtsc_timer *timer);
+inline double stop_rdtsc_timer(struct rdtsc_timer *timer);
 
 
 #endif
-
