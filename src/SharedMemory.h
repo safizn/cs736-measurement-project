@@ -12,7 +12,7 @@ public:
   SharedMemory(T data) {}
   // ~SharedMemory() {};
 
-  virtual int exchange(T data) override{
+  virtual int operator()(T data) override {
     utility::dummyLoop(1000000);
     return 0;
   }

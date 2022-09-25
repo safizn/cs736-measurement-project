@@ -9,8 +9,9 @@
 			"command": "/usr/bin/clang++-11",
 			"args": [
 				"-fdiagnostics-color=always",
+        "-w", // disable warnings
 				"-g",
-				"-std=c++20",
+				"-std=c++20", // support C++20 features
 				"${file}",
 				"-o",
 				"${workspaceFolder}/bin/${fileBasenameNoExtension}.out"
@@ -27,6 +28,7 @@
 			"command": "/usr/bin/g++-10",
 			"args": [
 				"-fdiagnostics-color=always",
+        "-w", // disable warnings
 				"-g",
 				"-std=c++20",
 				"-Werror",

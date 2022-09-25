@@ -10,5 +10,5 @@ public:
   // IPC() = default;
   // ~IPC();
   
-  virtual int exchange(T param) = 0;
+  virtual int operator()(T param) = 0;
 };
