@@ -76,6 +76,7 @@ public:
 
 
 // Template specialization for string data
+// TODO: Data buffer to pass
 template <>
 class Pipe <char*>
 {
