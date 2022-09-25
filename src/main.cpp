@@ -13,14 +13,13 @@ int main(int, char**) {
   assert(utility::checkCpp20Support() == 0); // check if compiler supports C++20 features
 
   constexpr size_t bufferLengthInBytes = 1024;
-  Buffer b {bufferLengthInBytes}; 
-  b.printBinaryData();
-  b.printSizeInfo(); 
+  Buffer b1 {bufferLengthInBytes}; 
+  b1.printSizeInfo(); 
+  b1.printBinaryData();
 
   // transfer data
   unsigned long long int data{0b10101010101011111101010110000};  // in binary
   constexpr std::size_t data_size = std::numeric_limits<unsigned long long int>::digits;
-  cout << data_size << endl;
 
   // instances
   Pipe<decltype(data)> i1{data, "pipe instance A"};
