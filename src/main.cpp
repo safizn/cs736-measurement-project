@@ -13,7 +13,7 @@ int main(int, char**) {
   assert(utility::checkCpp20Support() == 0); // check if compiler supports C++20 features
 
   constexpr size_t bufferLengthInBytes = 1024;
-  Buffer b1 {bufferLengthInBytes}; 
+  Buffer<uint64_t> b1 {bufferLengthInBytes}; 
   b1.printSizeInfo(); 
   b1.printBinaryData();
 

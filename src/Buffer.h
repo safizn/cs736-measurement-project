@@ -35,13 +35,14 @@ public:
   }
 
   void printSizeInfo() {
-    printf("Array details: \n\t Buffer entire size in bytes = %u % \n\t # elements = %u \n\t # of bits per element = %u \n", Buffer<T>::sizeof_vector(this->data), this->data.size(), sizeof(this->data[0]) * BYTE);
+    printf("Array details: \n\t Buffer entire size in bytes = %u \n\t # elements = %u \n\t # of bits per element = %u \n", Buffer<T>::sizeof_vector(this->data), this->data.size(), sizeof(this->data[0]) * BYTE);
   }
 
   void printBinaryData() {
     for(std::bitset<sizeof(T) * BYTE> i : this->data)  {
       cout << i << endl;
     }
+    cout << endl;
   }
 
 public:
