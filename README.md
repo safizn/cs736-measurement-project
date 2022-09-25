@@ -6,6 +6,8 @@
 
 ## Implementation - IPC mechanisms:
 - Unix pipe communication
+  - http://web.cse.ohio-state.edu/~mamrak.1/CIS762/pipes_lab_notes.html
+  - 
 - Socket (TCP/IP)
 - Shared mem channel
 
