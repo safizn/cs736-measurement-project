@@ -6,6 +6,8 @@
 #include <pthread.h>
 #include <sched.h>
 #include <errno.h>
+#include <stdlib.h>
+
 
 void pin_cpu(void) {
     printf("pinning thread to CPU\n");

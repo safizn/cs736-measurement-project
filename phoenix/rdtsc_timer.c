@@ -13,7 +13,7 @@
  * adapted from:
  * https://github.com/fordsfords/rdtsc/blob/main/rdtsc.h
  */
-static inline uint64_t rdtsc() {
+uint64_t rdtsc() {
     uint32_t be, le;
     // explanation why volatile is necessary:
     // https://stackoverflow.com/a/26456845
@@ -42,14 +42,14 @@ inline void start_rdtsc_timer(struct rdtsc_timer *timer) {
 /**
  * Part of `stop_timer` implementation that doesn't need to be inlined.
  */
-static double stop_rdtsc_timer_ool(struct rdtsc_timer *timer, uint64_t end);
+double stop_rdtsc_timer_ool(struct rdtsc_timer *timer, uint64_t end);
 
 inline double stop_rdtsc_timer(struct rdtsc_timer *timer) {
     uint64_t end = rdtsc();
     stop_rdtsc_timer_ool(timer, end);
 }
 
-static double stop_rdtsc_timer_ool(struct rdtsc_timer *timer, uint64_t end) {
+double stop_rdtsc_timer_ool(struct rdtsc_timer *timer, uint64_t end) {
     // assert actually is running
     if (!timer->start) {
         fprintf(stderr, "stop_rdtsc_timer on non-running timer, aborting\n");
