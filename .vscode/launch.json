@@ -8,7 +8,7 @@
 			"name": "(gdb) Launch current file .out equivalent",
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}/${fileBasenameNoExtension}.out",
+			"program": "${workspaceFolder}/bin/${fileBasenameNoExtension}.out",
 			"args": [],
 			"stopAtEntry": false,
 			"cwd": "${fileDirname}",
