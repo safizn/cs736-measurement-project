@@ -11,7 +11,7 @@
 
 struct trusted_timer;
 
-void init_trusted_timer(struct trusted_timer *timer);
+void init_trusted_timer(struct trusted_timer **timer);
 
 /**
  * Start an initialized trusted timer.

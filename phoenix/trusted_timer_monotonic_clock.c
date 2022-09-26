@@ -16,8 +16,8 @@ struct trusted_timer {
 };
 
 void init_trusted_timer(struct trusted_timer **timer) {
-    *timer = malloc(sizeof(trusted_timer));
-    timer->running = 0;
+    *timer = malloc(sizeof(struct trusted_timer));
+    (*timer)->running = 0;
 }
 
 void start_trusted_timer(struct trusted_timer *timer) {
@@ -31,7 +31,7 @@ double stop_trusted_timer(struct trusted_timer *timer) {
     struct timespec end;
     int end_error = clock_gettime(CLOCK_MONOTONIC, &end);
 
-
+	return stop_trusted_timer_ool(timer, end_error, end);
 }
 
 static double stop_trusted_timer_ool(struct trusted_timer *timer, int end_error, struct timespec end) {

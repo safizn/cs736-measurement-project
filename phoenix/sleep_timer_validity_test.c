@@ -6,6 +6,12 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <math.h>
+#include <stdlib.h>
+
+
+double ns_to_s(double ns) {
+	return ns / (1000 * 1000 * 1000);
+}
 
 
 int main() {
@@ -24,20 +30,17 @@ int main() {
     for (int i = 0; i < test_runs; ++i) {
         printf("running test %i/%i\n", i + 1, test_runs);
 
-        start_trusted_timer(&trusted_timer);
+        start_trusted_timer(trusted_timer);
         start_rdtsc_timer(&rdtsc_timer);
 
         sleep(sleep_for);
 
         double elapsed_rdtsc = stop_rdtsc_timer(&rdtsc_timer);
-        double elapsed_trusted = stop_trusted_timer(&trusted_timer);
+        double elapsed_trusted = stop_trusted_timer(trusted_timer);
 
-        printf(
-            "- elapsed_rdtsc=%lf\n- elapsed_trusted=%lf\n- delta=%lf\n",
-            elapsed_rdtsc,
-            elapsed_trusted,
-            fabs(elapsed_rdtsc - elapsed_trusted)
-        );
+	printf("- elapsed_rdtsc = %lf us\n", elapsed_rdtsc / 1000);
+	printf("- elapsed_trusted = %lf us\n", elapsed_trusted / 1000);
+	printf("- delta = %lf us\n", fabs(elapsed_rdtsc - elapsed_trusted) / 1000);
     }
 
     free(trusted_timer);
