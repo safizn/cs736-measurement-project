@@ -16,12 +16,12 @@ void init_trusted_timer(struct trusted_timer *timer);
 /**
  * Start an initialized trusted timer.
  */
-inline void start_trusted_timer(struct trusted_timer *timer);
+void start_trusted_timer(struct trusted_timer *timer);
 
 /**
  * Stop a running trusted timer, and return the elapsed nanoseconds.
  */
-inline double stop_trusted_timer(struct trusted_timer *timer);
+double stop_trusted_timer(struct trusted_timer *timer);
 
 
 #endif

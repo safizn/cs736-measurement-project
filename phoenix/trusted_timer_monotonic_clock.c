@@ -19,14 +19,14 @@ void init_trusted_timer(struct trusted_timer *timer) {
     timer->running = 0;
 }
 
-inline void start_trusted_timer(struct trusted_timer *timer) {
+void start_trusted_timer(struct trusted_timer *timer) {
     timer->running = 1;
     timer->error = clock_gettime(CLOCK_MONOTONIC, &timer->start);
 }
 
 static double stop_trusted_timer_ool(struct trusted_timer *timer, int end_error, struct timespec end);
 
-inline double stop_trusted_timer(struct trusted_timer *timer) {
+double stop_trusted_timer(struct trusted_timer *timer) {
     struct timespec end;
     int end_error = clock_gettime(CLOCK_MONOTONIC, &end);
 
