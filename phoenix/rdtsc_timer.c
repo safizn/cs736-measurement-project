@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <sys/platform/x86.h>
 #include <sys/resource.h>
-
+#include <x86intrin.h>
 
 /**
  * Get the current CPU's current timestamp counter value using the rdtsc
@@ -13,16 +13,39 @@
  * adapted from:
  * https://github.com/fordsfords/rdtsc/blob/main/rdtsc.h
  */
+/*
 uint64_t rdtsc() {
+*/	/*
     uint32_t be, le;
     // explanation why volatile is necessary:
     // https://stackoverflow.com/a/26456845
     __asm__ volatile ("rdtsc" : "=a" (le), "=d" (be));
     return ((uint64_t) be) << 32 | ((uint64_t) le);
+	*//*
+	//return __rdtsc();
+}
+*/
+
+inline uint64_t rdtsc_before() {
+	uint32_t hi, lo;
+	__asm__ volatile ("CPUID\n\t"
+		"RDTSC\n\t"
+		"mov %%edx, %0\n\t"
+		"mov %%eax, %1\n\t": "=r" (hi), "=r" (lo)::"%rax", "%rbx", "%rcx", "%rdx");
+	return ((uint64_t) hi) << 32 | ((uint64_t) lo);
+}
+
+inline uint64_t rdtsc_after() {
+	uint32_t hi, lo;
+	__asm__ volatile ("RDTSCP\n\t"
+		"mov %%edx, %0\n\t"
+		"mov %%eax, %1\n\t"
+		"CPUID\n\t": "=r" (hi), "=r" (lo)::"%rax", "%rbx", "%rcx", "%rdx");
+	return ((uint64_t) hi) << 32 | ((uint64_t) lo);
 }
 
 inline void start_rdtsc_timer(struct rdtsc_timer *timer) {
-    timer->start = rdtsc();
+    timer->start = rdtsc_before();
 }
 
 /**
@@ -31,7 +54,7 @@ inline void start_rdtsc_timer(struct rdtsc_timer *timer) {
 double stop_rdtsc_timer_ool(struct rdtsc_timer *timer, uint64_t end);
 
 inline double stop_rdtsc_timer(struct rdtsc_timer *timer) {
-    uint64_t end = rdtsc();
+    uint64_t end = rdtsc_after();
     stop_rdtsc_timer_ool(timer, end);
 }
 
