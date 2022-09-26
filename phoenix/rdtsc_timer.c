@@ -1,5 +1,6 @@
 
 #include "rdtsc_timer.h"
+#include "trusted_timer.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/platform/x86.h>
@@ -26,21 +27,21 @@ uint64_t rdtsc() {
 }
 */
 
-inline uint64_t rdtsc_before() {
+uint64_t rdtsc_before() {
 	uint32_t hi, lo;
-	__asm__ volatile ("CPUID\n\t"
+	__asm__ __volatile__ ("CPUID\n\t"
 		"RDTSC\n\t"
 		"mov %%edx, %0\n\t"
-		"mov %%eax, %1\n\t": "=r" (hi), "=r" (lo)::"%rax", "%rbx", "%rcx", "%rdx");
+		"mov %%eax, %1\n\t": "=r" (hi), "=r" (lo)::"%rax", "%rbx", "%rcx", "%rdx", "memory");
 	return ((uint64_t) hi) << 32 | ((uint64_t) lo);
 }
 
-inline uint64_t rdtsc_after() {
+uint64_t rdtsc_after() {
 	uint32_t hi, lo;
-	__asm__ volatile ("RDTSCP\n\t"
+	__asm__ __volatile__ ("RDTSCP\n\t"
 		"mov %%edx, %0\n\t"
 		"mov %%eax, %1\n\t"
-		"CPUID\n\t": "=r" (hi), "=r" (lo)::"%rax", "%rbx", "%rcx", "%rdx");
+		"CPUID\n\t": "=r" (hi), "=r" (lo)::"%rax", "%rbx", "%rcx", "%rdx", "memory");
 	return ((uint64_t) hi) << 32 | ((uint64_t) lo);
 }
 
@@ -67,7 +68,7 @@ double stop_rdtsc_timer_ool(struct rdtsc_timer *timer, uint64_t end) {
 
     // return timer to non-running state
     uint64_t start = timer->start;
-    timer->start = 0;
+    //timer->start = 0;
 
     // do the following floating point arithmetic in a strategic order to avoid
     // loss of significant bits assuming that the time measured is a relatively
@@ -85,12 +86,13 @@ double stop_rdtsc_timer_ool(struct rdtsc_timer *timer, uint64_t end) {
             // orders of magnitude of 1 for tiny measurements
             end - start
         )
-        / (
+	* timer->ns_per_tsc
+        /*/ (
             // convert from timestamps per second to timestamps per nanosecond,
             // producing a value within a few order of magnitudes of 1
             (double) timer->cpu_hz
             / (double) (1000 * 1000 * 1000)
-        )
+        )*/
         // subtract the estimated overhead.
         - timer->overhead;
 }
@@ -99,7 +101,7 @@ double stop_rdtsc_timer_ool(struct rdtsc_timer *timer, uint64_t end) {
  * Procedurally estimate and initialize an rdtsc timer's `overhead` value.
  */
 static void calibrate_overhead(struct rdtsc_timer *timer) {
-    int runs = 100000000;
+    int runs = 10000000;
     printf("calibrating timer overhead with %i runs...\n", runs);
 
     // we will run the calibration with overhead 0
@@ -122,6 +124,34 @@ static void calibrate_overhead(struct rdtsc_timer *timer) {
     );
 }
 
+static double measure_ns_per_tsc() {
+	double measure_for_s = 10;
+
+	printf("measuring tsc rate for %lf s\n", measure_for_s);
+
+	struct trusted_timer *timer;
+	init_trusted_timer(&timer);
+
+	uint64_t start_tsc = rdtsc_before();
+	start_trusted_timer(timer);
+
+	double elapsed_ns;
+	do {
+		elapsed_ns = stop_trusted_timer(timer);
+	} while (elapsed_ns < measure_for_s * 1000 * 1000 * 1000);
+
+	uint64_t end_tsc = rdtsc_after();
+
+	free(timer);
+
+	double ns_per_tsc = elapsed_ns / (double) (end_tsc - start_tsc);
+
+	printf("estimating %lf ns per tsc\n", ns_per_tsc);
+
+	return ns_per_tsc;
+}
+	
+
 void init_rdtsc_timer(struct rdtsc_timer *timer, uint64_t cpu_hz) {
     // assert CPU has the "invariant tsc" feature
     //
@@ -133,7 +163,8 @@ void init_rdtsc_timer(struct rdtsc_timer *timer, uint64_t cpu_hz) {
         exit(1);
     }
 
-    timer->cpu_hz = cpu_hz;
+    //timer->cpu_hz = cpu_hz;
+    timer->ns_per_tsc = measure_ns_per_tsc();
     timer->start = 0;
 
     calibrate_overhead(timer);

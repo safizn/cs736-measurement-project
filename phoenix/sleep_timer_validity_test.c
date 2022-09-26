@@ -33,7 +33,8 @@ int main() {
         start_trusted_timer(trusted_timer);
         start_rdtsc_timer(&rdtsc_timer);
 
-        sleep(sleep_for);
+        //sleep(sleep_for);
+	sleep(i + 1);
 
         double elapsed_rdtsc = stop_rdtsc_timer(&rdtsc_timer);
         double elapsed_trusted = stop_trusted_timer(trusted_timer);

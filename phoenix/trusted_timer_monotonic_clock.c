@@ -50,7 +50,7 @@ static double stop_trusted_timer_ool(struct trusted_timer *timer, int end_error,
     }
 
     // return timer to non-running state
-    timer->running = 0;
+    //timer->running = 0;
 
     return (double) (
         (end.tv_sec - timer->start.tv_sec)
