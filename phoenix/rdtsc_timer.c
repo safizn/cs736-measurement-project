@@ -21,20 +21,6 @@ uint64_t rdtsc() {
     return ((uint64_t) be) << 32 | ((uint64_t) le);
 }
 
-
-struct rdtsc_timer {
-    uint64_t cpu_hz;
-    /**
-     * Start timestamp, or 0 if not in started state.
-     */
-    uint64_t start;
-    /**
-     * Estimated overhead of starting and stopping the timer in nanoseconds,
-     * which is subtracted from measurements.
-     */
-    double overhead;
-};
-
 inline void start_rdtsc_timer(struct rdtsc_timer *timer) {
     timer->start = rdtsc();
 }

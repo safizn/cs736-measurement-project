@@ -18,7 +18,7 @@ int main() {
     struct rdtsc_timer rdtsc_timer;
     init_rdtsc_timer(&rdtsc_timer, cpu_hz);
 
-    struct trusted_timer trusted_timer;
+    struct trusted_timer *trusted_timer;
     init_trusted_timer(&trusted_timer);
 
     for (int i = 0; i < test_runs; ++i) {
@@ -39,4 +39,6 @@ int main() {
             fabs(elapsed_rdtsc - elapsed_trusted)
         );
     }
+
+    free(trusted_timer);
 }

@@ -15,7 +15,8 @@ struct trusted_timer {
     struct timespec start;
 };
 
-void init_trusted_timer(struct trusted_timer *timer) {
+void init_trusted_timer(struct trusted_timer **timer) {
+    *timer = malloc(sizeof(trusted_timer));
     timer->running = 0;
 }
 
