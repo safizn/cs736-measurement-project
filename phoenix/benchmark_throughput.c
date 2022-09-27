@@ -21,8 +21,6 @@ int main(int argc, char **argv) {
 	init_rdtsc_timer(&timer);
 
 	struct ipc_throughput_test *test;
-	int num_bytes = init_ipc_throughput_test(&test);
-	printf("num_bytes=%i\n", num_bytes);
 
 	for (int outer_repeat = 0; outer_repeat < outer_repeat_count; ++outer_repeat) {
 		printf("outer repeat %i/%i\n", outer_repeat + 1, outer_repeat_count);
@@ -36,6 +34,9 @@ int main(int argc, char **argv) {
 		for (int benchmark_repeat = 0; benchmark_repeat < benchmark_repeat_count; ++benchmark_repeat) {
 			printf("benchmark repeat %i/%i\n", benchmark_repeat + 1, benchmark_repeat_count);
 
+			int num_bytes = init_ipc_throughput_test(&test);
+			printf("num_bytes=%i\n", num_bytes);
+
 			start_rdtsc_timer(&timer);
 			run_ipc_throughput_test(test);
 			double elapsed_ns = stop_rdtsc_timer(&timer);
@@ -44,11 +45,11 @@ int main(int argc, char **argv) {
 
 			double throughput_byps = (double) num_bytes * 1000 * 1000 * 1000 / elapsed_ns;
 			printf("throughput Bps: %.50lf\n", throughput_byps);
+
+			free_ipc_throughput_test(test);
 		
 			printf("\n");
 		}
 		printf("\n");
 	}
-
-	free_ipc_throughput_test(test);
 }
