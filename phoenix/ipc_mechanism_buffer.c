@@ -98,7 +98,7 @@ struct ipc_throughput_test {
     sem_t *semptr;
 };
 
-void init_ipc_throughput_test(struct ipc_throughput_test **test) {
+int init_ipc_throughput_test(struct ipc_throughput_test **test) {
     //char parent_write_buffer[SIZE];
     
     /* get a pointer to memory */
