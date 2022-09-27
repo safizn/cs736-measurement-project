@@ -100,7 +100,7 @@ double stop_rdtsc_timer_ool(struct rdtsc_timer *timer, uint64_t end) {
 /**
  * Procedurally estimate and initialize an rdtsc timer's `overhead` value.
  */
-static void calibrate_overhead(struct rdtsc_timer *timer) {
+void calibrate_rdtsc_timer(struct rdtsc_timer *timer) {
     int runs = 10000000;
     printf("calibrating timer overhead with %i runs...\n", runs);
 
@@ -142,7 +142,7 @@ static void measure_ns_per_tsc_datapoint(
 }
 
 static double measure_ns_per_tsc() {
-	return 0.36873315784891180779681008061743341386318206787109;
+	//return 0.36873315784891180779681008061743341386318206787109;
 	
 	/*
 	double measure_for_s = 100;
@@ -191,7 +191,7 @@ static double measure_ns_per_tsc() {
 }
 	
 
-void init_rdtsc_timer(struct rdtsc_timer *timer, uint64_t cpu_hz) {
+void init_rdtsc_timer(struct rdtsc_timer *timer) {
     // assert CPU has the "invariant tsc" feature
     //
     // otherwise the timestamps per nanosecond will go up and down as the CPU
@@ -203,8 +203,9 @@ void init_rdtsc_timer(struct rdtsc_timer *timer, uint64_t cpu_hz) {
     }
 
     //timer->cpu_hz = cpu_hz;
-    timer->ns_per_tsc = measure_ns_per_tsc();
+    //timer->ns_per_tsc = measure_ns_per_tsc();
+    timer->ns_per_tsc = 0.36873315784891180779681008061743341386318206787109;
     timer->start = 0;
 
-    calibrate_overhead(timer);
+    //calibrate_overhead(timer);
 }

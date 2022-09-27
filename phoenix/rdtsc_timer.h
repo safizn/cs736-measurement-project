@@ -35,7 +35,9 @@ struct rdtsc_timer {
  * 
  * The user should be able to find the cpu hz with lscpu.
  */
-void init_rdtsc_timer(struct rdtsc_timer *timer, uint64_t cpu_hz);
+void init_rdtsc_timer(struct rdtsc_timer *timer);
+
+void calibrate_rdtsc_timer(struct rdtsc_timer *timer);
 
 /**
  * Start an initialized rdtsc timer.
