@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/wait.h>
 
 
 struct ipc_throughput_test {
@@ -32,8 +33,10 @@ int init_ipc_throughput_test(struct ipc_throughput_test **test) {
 		close(pipefds[0]);
 		
 		*test = malloc(sizeof(struct ipc_throughput_test));
-		(*test)->pipefd_1 = pipfds[1];
+		(*test)->pipefd_1 = pipefds[1];
 		(*test)->par_buf = par_buf;
+
+		return 1000000;
 	} else {
 		//child close the write end  
 		close(pipefds[1]);
@@ -52,7 +55,7 @@ void run_ipc_throughput_test(struct ipc_throughput_test *test) {
 	for (int i=0; i<1000000; i++)
 		test->par_buf[i]='a';
 	//parent write in the pipe write end
-	write(test->pipefd_1, par_buf, 1000000);
+	write(test->pipefd_1, test->par_buf, 1000000);
 	//after finishing writing, parent close the write end
 	close(test->pipefd_1);
 	//parent wait for child
