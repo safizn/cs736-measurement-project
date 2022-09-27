@@ -124,8 +124,28 @@ static void calibrate_overhead(struct rdtsc_timer *timer) {
     );
 }
 
+static void measure_ns_per_tsc_datapoint(
+		struct trusted_timer *timer,
+		double measure_for_ns,
+		double *delta_ns,
+		uint64_t *delta_tsc
+) {
+	uint64_t start_tsc = rdtsc_before();
+	start_trusted_timer(timer);
+
+	do {
+		*delta_ns = stop_trusted_timer(timer);
+	} while (*delta_ns < measure_for_ns);
+
+	uint64_t end_tsc = rdtsc_after();
+	*delta_tsc = end_tsc - start_tsc;
+}
+
 static double measure_ns_per_tsc() {
-	double measure_for_s = 10;
+	return 0.36873315784891180779681008061743341386318206787109;
+	
+	/*
+	double measure_for_s = 100;
 
 	printf("measuring tsc rate for %lf s\n", measure_for_s);
 
@@ -145,8 +165,27 @@ static double measure_ns_per_tsc() {
 	free(timer);
 
 	double ns_per_tsc = elapsed_ns / (double) (end_tsc - start_tsc);
+	*/
 
-	printf("estimating %lf ns per tsc\n", ns_per_tsc);
+	printf("measuring ns per tsc\n");
+
+	struct trusted_timer *timer;
+	init_trusted_timer(&timer);
+
+	uint64_t x1, x2;
+	double y1, y2;
+
+	measure_ns_per_tsc_datapoint(timer, (double) 100 * 1000 * 1000 * 1000, &y1, &x1);
+	measure_ns_per_tsc_datapoint(timer, (double) 200 * 1000 * 1000 * 1000, &y2, &x2);
+
+	free(timer);
+
+	double ns_per_tsc = (y2 - y1) / ((double) x2 - (double) x1);
+
+	printf("estimating %.50lf ns per tsc\n", ns_per_tsc);
+	
+	double mhz = ((double) 1 / ns_per_tsc) * (double) 1000;
+	printf("which is equivalent to %.50lf MHz\n", mhz);
 
 	return ns_per_tsc;
 }
