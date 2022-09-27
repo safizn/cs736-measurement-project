@@ -16,7 +16,9 @@ void free_ipc_latency_test(struct ipc_latency_test *test) {}
 
 struct ipc_throughput_test {};
 
-int init_ipc_throughput_test(struct ipc_throughput_test **test) {}
+int init_ipc_throughput_test(struct ipc_throughput_test **test) {
+    return 2000000;
+}
 
 void run_ipc_throughput_test(struct ipc_throughput_test *test) {
     sleep(1);

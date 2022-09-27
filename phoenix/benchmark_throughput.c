@@ -11,13 +11,7 @@ int main(int argc, char **argv) {
 	int calibrate_repeat_count = 3;
 	int benchmark_repeat_count = 3;
 
-	if (argc != 2) {
-		fprintf(stderr, "expected args: [num_bytes]\n");
-		exit(1);
-	}
-	int num_bytes = atoi(argv[1]);
-
-	printf("running latency benchmark with %i bytes\n", num_bytes);
+	printf("running throughput benchmark\n");
 
 
 	pin_cpu();
@@ -26,8 +20,9 @@ int main(int argc, char **argv) {
 	struct rdtsc_timer timer;
 	init_rdtsc_timer(&timer);
 
-	struct ipc_latency_test *test;
-	init_ipc_latency_test(&test, num_bytes);
+	struct ips_throughput_test *test;
+	int num_bytes = init_ipc_throughput_test(&test);
+	printf("num_bytes=%i\n", num_bytes);
 
 	for (int outer_repeat = 0; outer_repeat < outer_repeat_count; ++outer_repeat) {
 		printf("outer repeat %i/%i\n", outer_repeat + 1, outer_repeat_count);
@@ -36,23 +31,23 @@ int main(int argc, char **argv) {
 			
 			calibrate_rdtsc_timer(&timer);
 
-		printf("\n");
+			printf("\n");
 		}
 		for (int benchmark_repeat = 0; benchmark_repeat < benchmark_repeat_count; ++benchmark_repeat) {
 			printf("benchmark repeat %i/%i\n", benchmark_repeat + 1, benchmark_repeat_count);
 
 			start_rdtsc_timer(&timer);
-			run_ipc_latency_test(test);
+			run_ipc_throughput_test(test);
 			double elapsed_ns = stop_rdtsc_timer(&timer);
 
 			printf("took %.50lf ns\n", elapsed_ns);
 
-			double latency = elapsed_ns / 2;
-			printf("latency ns: %.50lf\n", latency);
+			double throughput_byps = (double) num_bytes * 1000 * 1000 * 1000 / elapsed_ns;
+			printf("throughput Bps: %.50lf\n", throughput_byps);
 		
+			printf("\n");
+		}
 		printf("\n");
-	}
-	printf("\n");
 	}
 
 	free_ipc_latency_test(test);
