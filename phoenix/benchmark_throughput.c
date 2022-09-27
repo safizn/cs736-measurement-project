@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
 	struct rdtsc_timer timer;
 	init_rdtsc_timer(&timer);
 
-	struct ips_throughput_test *test;
+	struct ipc_throughput_test *test;
 	int num_bytes = init_ipc_throughput_test(&test);
 	printf("num_bytes=%i\n", num_bytes);
 
@@ -50,5 +50,5 @@ int main(int argc, char **argv) {
 		printf("\n");
 	}
 
-	free_ipc_latency_test(test);
+	free_ipc_throughput_test(test);
 }
