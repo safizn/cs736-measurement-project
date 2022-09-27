@@ -86,6 +86,10 @@ Furthermore I pinned the CPU so it wouldn't have that pitfall
 Furthermore I tried to max out the thread priority but the lab computers wouldn't let me
 > TODO: probably superfluous information
 
+The CPU has "invariant TSC" feature which prevents frequency fluctuations from
+messing up our measurements, I wrote code that confirms that is true
+> TODO: elaborate, link article
+
 To cross-validate the rdtsc-based timer, I implemented a second timer based on
 Linux's `clock_gettime` API with `CLOCK_MONOTONIC`. That timer would be
 expected to have greater overhead, due to performing a system call, and
@@ -101,5 +105,44 @@ However, it did indicate that the overhead was
 > TODO: number, data
 which would come in useful later.
 
+I did similar work to measure the overhead of an rdtsc measurement and found
+that it was
+> TODO: number, elaborate, data
+
 I implemented a program, `sleep_timer_validity_test.c`, to sleep for different
-durations, timing it with both 
+durations, timing it with both the trusted timer and the rdtsc timer, and
+measuring the difference. I was unfortunately measuring a discrepancy between
+the two timers which scaled linearly with the duration slept. The rdtsc timer
+was measuring periods
+> TODO: percentage
+faster than the trusted timer. Timer overhead was not a sufficient explanation
+for this discrepancy, both because the discrepancy was significantly larger
+than both the rdtsc timer and trusted timer overhead combined, and because
+overhead wouldn't explain why the discrepancy scales linearly.
+
+Eventually I realized that the CPU actually had a timestamp-per-second slightly
+higher than the 2700 MHz CPU frequency described by lscpu. By using a trusted
+timer to sleep for 5 minutes, and measuring how many timestamps passed in
+that duration (using a large duration avoid pitfall) I measured the timestamp-
+per-second to be closer to 2711.9914 million than 2700 million.
+> TODO: wait I actually ended up doing something even more fancy using point
+>       -slope formula 
+
+By using that value in the code instead of 2700 it fixed those inaccuracies
+> TODO: elaborate, data
+
+Then I calibrate the rdtsc counter before each run to determine its overhead
+and subtract it.
+> TODO: elaborate, data, link article
+
+Finally, for each benchmark, I use a loop as such:
+
+- several times:
+        - several times:
+                - recalibrate the timer
+        - several times:
+                - do the benchmark
+
+This helps reveal and bypass inaccuracies due to various ways in which modern
+computer hardware "warms up" and gets faster after doing the same task several
+times, or by doing active CPU work in general.
