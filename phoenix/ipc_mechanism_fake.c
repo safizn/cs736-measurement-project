@@ -1,6 +1,6 @@
 
 #include "ipc_mechanism.h"
-#include <stdlib.h>
+#include <unistd.h>
 
 
 struct ipc_latency_test {};
