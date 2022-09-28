@@ -1,78 +1,122 @@
 #pragma once
 
-#include <string>
 #include <iostream>
+#include <string>
 // includes every standard library and STL include file
-#include <bits/stdc++.h> 
+#include <bits/stdc++.h>
 // fork, pipe https://pubs.opengroup.org/onlinepubs/7908799/xsh/unistd.h.html
-#include <unistd.h> 
+#include <err.h>
 #include <fcntl.h> // file control options - O_NONBLOCK
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #include "Buffer.h"
 #include "IPC.h"
 #include "utility.cpp"
 
 using namespace std;
-// size_t buf_size = 1 << 18; // 2^18 = ~256KiB
-const size_t buf_size = 4096;
 
+#define READ_END 0
+#define WRITE_END 1
 
-template<typename T, size_t bufferSize = 1024*1024> 
+template <size_t messageSize = 4 /*bytes*/, size_t chunkSize = 1 /*bytes*/, typename T = uint64_t>
 class PipeDynamic : public IPC<T> {
 public:
   PipeDynamic() = default;
-  PipeDynamic(Buffer<T> & data) : PipeDynamic(data) {}
-  PipeDynamic(Buffer<T> & data, std::string label = "") : sendBuffer(data), label(label) {
-    // creates one-way communication channel (fd[1] write; fd[0] read)
-    // TODO: consider flag 0 | O_NONBLOCK in pipe2()
-    assert(pipe(this->fd) != -1); // 0 flag = same as pipe();
-    
-    // char* buf = (char*) malloc(buf_size); // reader malloc
-    char buf[buf_size];
-
-    pid_t pid = fork(); // inherits file descriptors 
-    switch((this->pid_child = pid)) {
-      case -1: perror("fork"); exit(EXIT_FAILURE); 
-
-      case 0: { // child 
-        close(this->fd[0]); // close unused read
-        // ssize_t remaining = this->sendBuffer.bytes;
-
-        for(unsigned long int block : this->sendBuffer.data) {
-          const void* b = &block; 
-          ssize_t written = write(this->fd[1], b, sizeof(block));
-          cout << block << endl;
-          if(written == -1) { cerr << "Error: " << strerror(errno) << endl; }
-          // remaining -= written; 
-        } 
-        close(this->fd[1]); // reader will receive EOF
-        exit(0);
-      } 
-
-      default:  // parent
-        close(this->fd[1]);
-        ssize_t read_size;
-        read_size = read(this->fd[0], buf, buf_size);
-        if(read_size == -1){ cerr << "Error: " << strerror(errno) << endl; }
-        printf("Received: %u", buf);
-
-        close(this->fd[0]);
-    }
+  PipeDynamic(Buffer<T> &data) : PipeDynamic(data) {}
+  PipeDynamic(Buffer<T> &data, std::string label = "") : dataBuffer(data), label(label) {
+    assert((messageSize % chunkSize) == 0);
   }
 
   // exchange/send data
   virtual int operator()(T param = 0) override {
+    int fd_ctp[2],
+        fd_ptc[2];
+    assert(pipe(fd_ctp) != -1);
+    assert(pipe(fd_ptc) != -1);
+
+    switch ((this->pid_child = fork())) {
+    case -1:
+      perror("fork");
+      exit(EXIT_FAILURE);
+    case 0:
+      goto CHILD;
+    default:
+      goto PARENT;
+    }
+
+  CHILD : {
+    close(fd_ctp[READ_END]);
+    close(fd_ptc[WRITE_END]);
+    this->write_end = fd_ctp[WRITE_END];
+    this->read_end = fd_ptc[READ_END];
+
+    unsigned char *p = this->dataBuffer.get_pointer();
+    // { // testing
+    //   std::bitset<BYTE> e = this->dataBuffer.data[1];
+    //   std::bitset<BYTE> i = *(p + sizeof(uint64_t));
+    //   cout << i << endl;
+    //   cout << e << endl;
+    // }
+    size_t remain{messageSize};
+    int counter{0};
+    while (remain > 0) {
+      ssize_t written = write(this->write_end, p, chunkSize);
+      if (written == -1)
+        cerr << "Error: " << strerror(errno) << endl;
+      p += chunkSize;
+      remain -= written;
+      counter++;
+      // printf("child written: %u with # iterations: %u\n", written, counter);
+      // { // testing
+      //   std::bitset<BYTE> e = *(p);
+      //   cout << e << endl;
+      // }
+    }
+
+    close(this->read_end);
+    close(this->write_end);
+    printf("child process ended gracefully\n");
+    exit(EXIT_SUCCESS);
+  }
+
+  PARENT : {
+    close(fd_ctp[WRITE_END]);
+    close(fd_ptc[READ_END]);
+    this->write_end = fd_ptc[WRITE_END];
+    this->read_end = fd_ctp[READ_END];
+
+    ssize_t received{0};
+    int counter{0};
+    do {
+      received = read(this->read_end, tempBuffer, chunkSize);
+      if (received == -1)
+        cout << "Error[P]: "
+             << strerror(errno) << endl;
+      counter++;
+      // printf("parent received: %u with # iterations: %u\n", received, counter);
+      // { // testing
+      //   std::bitset<BYTE> e = *((unsigned char *)tempBuffer);
+      //   cout << e << endl;
+      // }
+
+    } while (received > 0);
+
+    close(this->read_end);
+    close(this->write_end);
+  }
+
     return 0;
   }
 
 public:
-  std::string label {""}; // instance label
-  int fd[2]; // file descriptor to pipe
-  pid_t pid_child{}; // process id
-  Buffer<T> sendBuffer; // data to transfer (for writing process)
+  std::string label{""}; // instance label
+  pid_t pid_child{};     // process id
+  Buffer<T> dataBuffer;  // data to transfer (for writing process)
+  // 2 file descriptors to pipe (child to parent & parent to child direction)
+  int read_end, write_end;
+  unsigned char tempBuffer[chunkSize]; // receive buffer
 };
-
-

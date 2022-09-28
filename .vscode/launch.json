@@ -8,7 +8,8 @@
 			"name": "(gdb) Launch current file .out equivalent",
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}/bin/${fileBasenameNoExtension}.out",
+			// "program": "${workspaceFolder}/bin/${fileBasenameNoExtension}.out",
+			"program": "${workspaceFolder}/bin/main.out",
 			"args": [],
 			"stopAtEntry": false,
 			"cwd": "${fileDirname}",
@@ -26,8 +27,20 @@
 					"text": "-gdb-set disassembly-flavor intel",
 					"ignoreFailures": true
 				}
+				// ,
+
+				// {
+				// 	"description": "In this mode GDB will be attached to both processes after a call to fork() or vfork().",
+				// 	"text": "-gdb-set detach-on-fork off",
+				// 	"ignoreFailures": true
+				// },
+				// {
+				// 	"description": "The new process is debugged after a fork. The parent process runs unimpeded.",
+				// 	"text": "-gdb-set follow-fork-mode child",
+				// 	"ignoreFailures": true
+				// }
 			],
-			"preLaunchTask": "C/C++: g++-10 build"
+			"preLaunchTask": "C/C++: clang++-11 build"
 		}
 	]
 }
