@@ -31,8 +31,44 @@ public:
     assert((messageSize % chunkSize) == 0);
   }
 
-  // exchange/send data
-  virtual int operator()(T param = 0) override {
+  virtual int one_direction() override {
+    int fd_ctp[2];
+    assert(pipe(fd_ctp) != -1);
+
+    switch ((this->pid_child = fork())) {
+    case -1:
+      perror("fork");
+      exit(EXIT_FAILURE);
+    case 0:
+      goto CHILD;
+    default:
+      goto PARENT;
+    }
+
+  CHILD : {
+    close(fd_ctp[READ_END]);
+    this->write_end = fd_ctp[WRITE_END];
+
+    writeRole();
+
+    close(this->write_end);
+    printf("[child process ended gracefully.]\n");
+    exit(EXIT_SUCCESS);
+  }
+
+  PARENT : {
+    close(fd_ctp[WRITE_END]);
+    this->read_end = fd_ctp[READ_END];
+
+    readRole();
+
+    close(this->read_end);
+  }
+
+    return 0;
+  }
+
+  virtual int round_trip() override {
     int fd_ctp[2],
         fd_ptc[2];
     assert(pipe(fd_ctp) != -1);
@@ -49,11 +85,51 @@ public:
     }
 
   CHILD : {
-    close(fd_ctp[READ_END]);
-    close(fd_ptc[WRITE_END]);
-    this->write_end = fd_ctp[WRITE_END];
     this->read_end = fd_ptc[READ_END];
+    this->write_end = fd_ctp[WRITE_END];
 
+  CHILD_WRITE : {
+    close(fd_ctp[READ_END]);
+    writeRole();
+    close(this->write_end);
+  }
+  CHILD_READ : {
+    close(fd_ptc[WRITE_END]);
+    readRole();
+    close(this->read_end);
+  }
+
+    printf("[child process ended gracefully.]\n");
+    exit(EXIT_SUCCESS);
+  }
+
+  PARENT : {
+    this->write_end = fd_ptc[WRITE_END];
+    this->read_end = fd_ctp[READ_END];
+
+  PARENT_READ : {
+    close(fd_ctp[WRITE_END]);
+    readRole();
+    close(this->read_end);
+  }
+  PARENT_WRITE : {
+    close(fd_ptc[READ_END]);
+    writeRole();
+    close(this->write_end);
+  }
+  }
+
+    return 0;
+  }
+
+  virtual int
+  operator()() override {
+
+    return 0;
+  }
+
+private:
+  void writeRole() {
     unsigned char *p = this->dataBuffer.get_pointer();
     // { // testing
     //   std::bitset<BYTE> e = this->dataBuffer.data[1];
@@ -70,25 +146,15 @@ public:
       p += chunkSize;
       remain -= written;
       counter++;
-      // printf("child written: %u with # iterations: %u\n", written, counter);
+      // printf("[%u] written: %u with # iterations: %u\n", getpid(), written, counter);
       // { // testing
       //   std::bitset<BYTE> e = *(p);
       //   cout << e << endl;
       // }
     }
-
-    close(this->read_end);
-    close(this->write_end);
-    printf("child process ended gracefully\n");
-    exit(EXIT_SUCCESS);
   }
 
-  PARENT : {
-    close(fd_ctp[WRITE_END]);
-    close(fd_ptc[READ_END]);
-    this->write_end = fd_ptc[WRITE_END];
-    this->read_end = fd_ctp[READ_END];
-
+  void readRole() {
     ssize_t received{0};
     int counter{0};
     do {
@@ -97,19 +163,13 @@ public:
         cout << "Error[P]: "
              << strerror(errno) << endl;
       counter++;
-      // printf("parent received: %u with # iterations: %u\n", received, counter);
+      // printf("[%u] received: %u with # iterations: %u\n", getpid(), received, counter);
       // { // testing
       //   std::bitset<BYTE> e = *((unsigned char *)tempBuffer);
       //   cout << e << endl;
       // }
 
     } while (received > 0);
-
-    close(this->read_end);
-    close(this->write_end);
-  }
-
-    return 0;
   }
 
 public:

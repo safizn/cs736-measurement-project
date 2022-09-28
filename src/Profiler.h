@@ -14,7 +14,7 @@ public:
     // instantiate
   }
 
-  void run(Functor instance) {
+  void benchmark(Functor instance) {
     this->start = std::chrono::steady_clock::now();
     {
       instance();
