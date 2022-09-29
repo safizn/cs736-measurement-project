@@ -18,8 +18,16 @@
 
 using namespace std;
 
+// socket files will be created in current working directory
 #define SERVER_SOCK_PATH "unix_sock.server"
 #define CLIENT_SOCK_PATH "unix_sock.client"
+
+// workfow:
+// socket()
+// bind()
+// listen()
+// select()
+// accept()
 
 template <size_t messageSize = 4 /*bytes*/, size_t chunkSize = 1 /*bytes*/, typename T = uint64_t>
 class Socket : public IPC<T> {
@@ -29,37 +37,32 @@ public:
   Socket(Buffer<T> &data, std::string label = "") : dataBuffer(data), label(label) {
     assert((messageSize % chunkSize) == 0);
 
-    struct sockaddr_un server_addr;
-    struct sockaddr_un client_addr;
-    memset(&server_addr, 0, sizeof(struct sockaddr_un));
-    memset(&client_addr, 0, sizeof(struct sockaddr_un));
-    int rc; // connection
-
-    // bind address to FS to share with client
-    server_addr.sun_family = AF_UNIX;
-    strcpy(server_addr.sun_path, SERVER_SOCK_PATH);
-    client_addr.sun_family = AF_UNIX;
-    strcpy(client_addr.sun_path, CLIENT_SOCK_PATH);
+    memset(&server_addr, 0, sizeof(server_addr));
+    memset(&client_addr, 0, sizeof(client_addr));
 
     switch ((this->pid_child = fork())) {
     case -1:
       perror("fork");
       exit(EXIT_FAILURE);
     case 0:
-      sleep(1);
       goto CHILD;
     default:
       goto PARENT;
     }
 
   CHILD : {
-    createServer(server_addr, client_addr, rc);
+    sleep(2);
+    createClient();
     printf("[child process ended gracefully.]\n");
     exit(EXIT_SUCCESS);
   }
 
   PARENT : {
-    createClient(server_addr, client_addr, rc);
+    createServer();
+    int status = 0;
+    while ((wait(&status)) > 0)
+      ;
+    cout << "server ended gracefully" << endl;
   }
   }
 
@@ -77,40 +80,41 @@ public:
   }
 
 private:
-  void createServer(struct sockaddr_un &server_addr, struct sockaddr_un &client_addr, int &rc) {
-    // maximum number of client connections in queue
-    int backlog = 10;
+  void createServer() {
     // open socket stream (SOCK_STREAM type)
-    int server_sock = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (server_sock == -1) {
+    this->sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (this->sock == -1) {
       printf("SERVER: Error when opening server socket.\n");
       exit(1);
     }
     // bind to an address on FS for client to pick up
+    // bind address to FS to share with client
+    server_addr.sun_family = AF_UNIX;
+    strcpy(server_addr.sun_path, SERVER_SOCK_PATH);
     int len = sizeof(server_addr);
-    // unline file before bind
+    // unlink file before bind
     unlink(SERVER_SOCK_PATH);
 
-    rc = bind(server_sock, (struct sockaddr *)&server_addr, len);
+    rc = bind(this->sock, (struct sockaddr *)&server_addr, len);
     if (rc == -1) {
       printf("SERVER: Server bind error: %s\n", strerror(errno));
-      close(server_sock);
+      close(this->sock);
       exit(1);
     }
 
     // accept connection
-    rc = listen(server_sock, backlog);
+    rc = listen(this->sock, this->backlog);
     if (rc == -1) {
       printf("SERVER: Listen error: %s\n", strerror(errno));
-      close(server_sock);
+      close(this->sock);
       exit(1);
     }
 
     printf("SERVER: Socket listening...\n");
-    int client_fd = accept(server_sock, (struct sockaddr *)&client_addr, (socklen_t *)&len);
+    int client_fd = accept(this->sock, (struct sockaddr *)&client_addr, (socklen_t *)&len);
     if (client_fd == -1) {
       printf("SERVER: Accept error: %s\n", strerror(errno));
-      close(server_sock);
+      close(this->sock);
       close(client_fd);
       exit(1);
     }
@@ -122,7 +126,7 @@ private:
     int byte_recv = recv(client_fd, tempBuffer, sizeof(tempBuffer), 0);
     if (byte_recv == -1) {
       printf("SERVER: Error when receiving message: %s\n", strerror(errno));
-      close(server_sock);
+      close(this->sock);
       close(client_fd);
       exit(1);
     } else
@@ -135,41 +139,46 @@ private:
     rc = send(client_fd, tempBuffer, strlen(tempBuffer), 0);
     if (rc == -1) {
       printf("SERVER: Error when sending message to client.\n");
-      close(server_sock);
+      close(this->sock);
       close(client_fd);
       exit(1);
     }
     printf("SERVER: Done!\n");
 
-    close(server_sock);
+    close(this->sock);
     close(client_fd);
     remove(SERVER_SOCK_PATH);
   }
 
-  void createClient(struct sockaddr_un &server_addr, struct sockaddr_un &client_addr, int &rc) {
+  void createClient() {
     // open client socket (same as server)
-    int client_sock = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (client_sock == -1) {
+    this->sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (this->sock == -1) {
       printf("CLIENT: Socket error: %s\n", strerror(errno));
       exit(1);
     }
 
     // Bind client to FS address (Note: this binding could be skip if we want only send data to server without receiving)
+    client_addr.sun_family = AF_UNIX;
+    strcpy(client_addr.sun_path, CLIENT_SOCK_PATH);
     int len = sizeof(client_addr);
-
     unlink(CLIENT_SOCK_PATH);
-    rc = bind(client_sock, (struct sockaddr *)&client_addr, len);
+
+    rc = bind(this->sock, (struct sockaddr *)&client_addr, len);
     if (rc == -1) {
       printf("CLIENT: Client binding error. %s\n", strerror(errno));
-      close(client_sock);
+      close(this->sock);
       exit(1);
     }
 
+    server_addr.sun_family = AF_UNIX;
+    strcpy(server_addr.sun_path, SERVER_SOCK_PATH);
+
     // connect to server address
-    rc = connect(client_sock, (struct sockaddr *)&server_addr, len);
+    rc = connect(this->sock, (struct sockaddr *)&server_addr, len);
     if (rc == -1) {
       printf("CLIENT: Connect error. %s\n", strerror(errno));
-      close(client_sock);
+      close(this->sock);
       exit(1);
     }
     printf("CLIENT: Connected to server.\n");
@@ -177,10 +186,10 @@ private:
     // send message
     memset(tempBuffer, 0, sizeof(tempBuffer));
     strcpy(tempBuffer, "CLIENT_MSG");
-    rc = send(client_sock, tempBuffer, sizeof(tempBuffer), 0);
+    rc = send(this->sock, tempBuffer, sizeof(tempBuffer), 0);
     if (rc == -1) {
       printf("CLIENT: Send error. %s\n", strerror(errno));
-      close(client_sock);
+      close(this->sock);
       exit(1);
     }
     printf("CLIENT: Sent a message to server.\n");
@@ -188,23 +197,27 @@ private:
     // listen to response
     printf("CLIENT: Wait for respond from server...\n");
     memset(tempBuffer, 0, sizeof(tempBuffer));
-    rc = recv(client_sock, tempBuffer, sizeof(tempBuffer), 0);
+    rc = recv(this->sock, tempBuffer, sizeof(tempBuffer), 0);
     if (rc == -1) {
       printf("CLIENT: Recv Error. %s\n", strerror(errno));
-      close(client_sock);
+      close(this->sock);
       exit(1);
     } else
       printf("CLIENT: Message received: %s\n", tempBuffer);
 
-    printf("CLIENT: Done!\n");
-
-    close(client_sock);
+    close(this->sock);
     remove(CLIENT_SOCK_PATH);
   }
 
 public:
-  std::string label{""};      // instance label
-  pid_t pid_child{};          // process id
-  Buffer<T> dataBuffer;       // random data to transfer
-  char tempBuffer[chunkSize]; // receive buffer
+  std::string label{""}; // instance label
+  pid_t pid_child{};     // process id
+  Buffer<T> dataBuffer;  // random data to transfer
+  char tempBuffer[256];  // receive buffer
+  int sock{};            // client/server sockets
+  int rc{};              // connection
+  struct sockaddr_un server_addr {};
+  struct sockaddr_un client_addr {};
+  // maximum number of client connections in queue
+  const int backlog = 10;
 };

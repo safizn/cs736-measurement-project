@@ -18,7 +18,11 @@
   - https://www.linuxhowtos.org/C_C++/socket.htm
   - https://biendltb.github.io/tech/inter-process-communication-ipc-in-cpp/
   - https://man7.org/linux/man-pages/man7/unix.7.html
+  - Check Unix opened sockets "$ ss -s" 
 - Shared mem channel
+  - https://www.youtube.com/watch?v=Yb6pc_OU5x8
+  - https://www.youtube.com/watch?v=dJuYKfR8vec
+  - 
 
 # Resources: 
 - https://medium.com/swlh/reliable-performance-testing-in-c-1df7a3ba398
