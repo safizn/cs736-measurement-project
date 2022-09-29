@@ -11,6 +11,6 @@ public:
   // ~IPC();
 
   virtual int operator()() = 0;
-  virtual int one_direction() = 0;
-  virtual int round_trip() = 0;
+  virtual int one_direction() = 0; // throughput test
+  virtual int round_trip() = 0;    // latency test
 };

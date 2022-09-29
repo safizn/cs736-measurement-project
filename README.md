@@ -12,6 +12,12 @@
   - Linux let's you increase the size of the pipe buffer via the F_SETPIPE_SZ fcntl(2) (as a multiple of the page size and up to the max size defined in /proc/sys/fs/pipe-max-size for normal users).  pipe-max-size = 2^20 = 1048576
   - TESTED: max pipe write size = 2^16 = 65536 = 64K
 - Socket (TCP/IP)
+  - https://inet.omnetpp.org/docs/developers-guide/ch-sockets.html
+  - https://www.softprayog.in/programming/network-socket-programming-using-tcp-in-c
+  - https://www.youtube.com/watch?v=WDn-htpBlnU & https://www.youtube.com/watch?v=fmn-pRvNaho
+  - https://www.linuxhowtos.org/C_C++/socket.htm
+  - https://biendltb.github.io/tech/inter-process-communication-ipc-in-cpp/
+  - https://man7.org/linux/man-pages/man7/unix.7.html
 - Shared mem channel
 
 # Resources: 
