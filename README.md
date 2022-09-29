@@ -31,5 +31,7 @@
 - https://stackoverflow.com/questions/11563963/how-to-write-a-large-buffer-into-a-binary-file-in-c-fast
 - https://www.netmeister.org/blog/ipcbufs.html
 - https://biendltb.github.io/tech/inter-process-communication-ipc-in-cpp/
+- https://github.com/romit18/WarmUpAOS
+- https://github.com/safizn/cs736-measurement-project/blob/phoenix/main/phoenix/README.md
 
 
