@@ -46,10 +46,10 @@ int runTasks() {
   }
   */
 
-  // EXAMPLE USAGE SOCKET 1: for thoughput (one_direction())
+  // EXAMPLE USAGE SOCKET 1: for thoughput
   {
     constexpr size_t messageSize = Buffer<uint64_t>::_64K,
-                     chunkSize = 1024 * 16;
+                     chunkSize = 1024 /** 16*/;
     constexpr Mode mode = Mode::one_direction; // Mode::one_direction or Mode::round_trip
     // use randomized dataset
     Buffer<uint64_t> dataset{messageSize};
@@ -66,6 +66,26 @@ int runTasks() {
     p.benchmark(func); // Note: benchmark logic should be in this function @ Profiuler.h
     p.exportResult();
   }
+  // EXAMPLE USAGE SOCKET 1: for latency
+  // {
+  //   constexpr size_t messageSize = Buffer<uint64_t>::_64K,
+  //                    chunkSize = 1024 * 16;
+  //   constexpr Mode mode = Mode::round_trip; // Mode::one_direction or Mode::round_trip
+  //   // use randomized dataset
+  //   Buffer<uint64_t> dataset{messageSize};
+  //   // profiler instance
+  //   Profiler<std::function<int()>> p{"profiler A label"};
+  //   // mechanism instance & callback
+  //   Socket<messageSize, chunkSize, mode> instance{dataset, "pipe instance"};
+  //   auto func = [&instance]() -> int {
+  //     instance();
+  //     instance.cleanup();
+  //     return 0;
+  //   };
+  //   // run benchmark on callback & export results
+  //   p.benchmark(func); // Note: benchmark logic should be in this function @ Profiuler.h
+  //   p.exportResult();
+  // }
 
   return 0;
 }

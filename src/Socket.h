@@ -84,32 +84,36 @@ public:
   }
 
   virtual int operator()() override {
-    // send message
-    {
-      unsigned char *p = this->dataBuffer.get_pointer();
-      size_t remain{messageSize};
-      while (remain > 0) {
-        ssize_t written = send(this->sock, p, chunkSize, 0);
-        if (written == -1) {
-          printf("Client: Error when sending message to client.\n");
-          close(this->sock);
-          close(client_fd);
-          exit(1);
-        }
 
-        p += chunkSize;
-        remain -= written;
+  SINGLE_DIRECTION : // send message
+  {
+    unsigned char *p = this->dataBuffer.get_pointer();
+    size_t remain{messageSize};
+    int counter{0};
 
-        // printf("[%u] written: %u with # iterations: %u\n", getpid(), written, counter);
-        // { // testing
-        //   std::bitset<BYTE> e = *(p);
-        //   cout << e << endl;
-        // }
+    while (remain > 0) {
+      ssize_t written = send(this->sock, p, chunkSize, 0);
+      if (written == -1) {
+        printf("Client: Error when sending message to client.\n");
+        close(this->sock);
+        close(client_fd);
+        exit(1);
+      }
+
+      p += chunkSize;
+      remain -= written;
+
+      { // testing
+        std::bitset<BYTE> e = *(p);
+        printf("[%u] written: %u bytes with # iterations: %u    Data: ", getpid(), written, counter);
+        cout << e << endl;
       }
     }
+  }
 
     if (mode == Mode::one_direction)
-      return 0;
+      goto ROUND_TRIP;
+    // return 0;
     else
       goto ROUND_TRIP;
 
@@ -129,12 +133,12 @@ public:
         // printf("CLIENT: Message received: %s\n", tempBuffer);
       }
 
-      // counter++;
-      // printf("[%u] received: %u with # iterations: %u\n", getpid(), received, counter);
-      // { // testing
-      //   std::bitset<BYTE> e = *((unsigned char *)tempBuffer);
-      //   cout << e << endl;
-      // }
+      counter++;
+      { // testing
+        std::bitset<BYTE> e = *((unsigned char *)tempBuffer);
+        printf("[%u] received: %u bytes with # iterations: %u   Data: ", getpid(), received, counter);
+        cout << e << endl;
+      }
     } while (received > 0);
   }
 
@@ -189,32 +193,33 @@ private:
     printf("SERVER: Connected to client at: %s\n", client_addr.sun_path);
     printf("SERVER: Wating for message...\n");
 
-    // LISTEN TO CLIENT
-    {
-      ssize_t received{0};
-      int counter{0};
-      do {
-        received = recv(client_fd, tempBuffer, chunkSize, 0);
-        if (received == -1) {
-          printf("SERVER: Error when receiving message: %s\n", strerror(errno));
-          close(this->sock);
-          close(client_fd);
-          exit(1);
-        } else {
-          // printf("SERVER: Server received message: %s.\n", tempBuffer);
-        }
+  SINGLE_DIRECTION : // LISTEN TO CLIENT
+  {
+    ssize_t received{0};
+    int counter{0};
+    do {
+      received = recv(client_fd, tempBuffer, chunkSize, 0);
+      if (received == -1) {
+        printf("SERVER: Error when receiving message: %s\n", strerror(errno));
+        close(this->sock);
+        close(client_fd);
+        exit(1);
+      } else {
+        // printf("SERVER: Server received message: %s.\n", tempBuffer);
+      }
 
-        // counter++;
-        // printf("[%u] received: %u with # iterations: %u\n", getpid(), received, counter);
-        // { // testing
-        //   std::bitset<BYTE> e = *((unsigned char *)tempBuffer);
-        //   cout << e << endl;
-        // }
-      } while (received > 0);
-    }
+      { // testing
+        counter++;
+        std::bitset<BYTE> e = *((unsigned char *)tempBuffer);
+        printf("[%u] received: %u bytes with # iterations: %u    Data: ", getpid(), received, counter);
+        cout << e << endl;
+      }
+    } while (received > 0);
+  }
 
     if (mode == Mode::one_direction)
-      return;
+      goto ROUND_TRIP;
+    // return;
     else
       goto ROUND_TRIP;
 
@@ -223,6 +228,8 @@ private:
 
     unsigned char *p = this->dataBuffer.get_pointer();
     size_t remain{messageSize};
+    int counter{0};
+
     while (remain > 0) {
       ssize_t written = send(client_fd, p, chunkSize, 0);
       if (written == -1) {
@@ -235,14 +242,12 @@ private:
       p += chunkSize;
       remain -= written;
 
-      // printf("[%u] written: %u with # iterations: %u\n", getpid(), written, counter);
-      // { // testing
-      //   std::bitset<BYTE> e = *(p);
-      //   cout << e << endl;
-      // }
+      { // testing
+        std::bitset<BYTE> e = *(p);
+        printf("[%u] written: %u bytes with # iterations: %u   Data: ", getpid(), written, counter);
+        cout << e << endl;
+      }
     }
-
-    // printf("SERVER: Done!\n");
   }
   }
 
