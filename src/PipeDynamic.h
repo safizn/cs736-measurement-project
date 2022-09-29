@@ -145,7 +145,7 @@ private:
         cerr << "Error: " << strerror(errno) << endl;
       p += chunkSize;
       remain -= written;
-      counter++;
+      // counter++;
       // printf("[%u] written: %u with # iterations: %u\n", getpid(), written, counter);
       // { // testing
       //   std::bitset<BYTE> e = *(p);
@@ -162,7 +162,7 @@ private:
       if (received == -1)
         cout << "Error[P]: "
              << strerror(errno) << endl;
-      counter++;
+      // counter++;
       // printf("[%u] received: %u with # iterations: %u\n", getpid(), received, counter);
       // { // testing
       //   std::bitset<BYTE> e = *((unsigned char *)tempBuffer);

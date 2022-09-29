@@ -23,8 +23,8 @@ int runTasks() {
     // profiler instance
     Profiler<std::function<int()>> p{"profiler A label"};
     // mechanism instance & callback
-    PipeDynamic<messageSize, chunkSize> intance{dataset, "pipe instance"};
-    auto func = [&intance]() -> int { return intance.one_direction(); };
+    PipeDynamic<messageSize, chunkSize> instance{dataset, "pipe instance"};
+    auto func = [&instance]() -> int { return instance.one_direction(); };
     // run benchmark on callback & export results
     p.benchmark(func); // Note: benchmark logic should be in this function @ Profiuler.h
     p.exportResult();
@@ -38,8 +38,8 @@ int runTasks() {
     // profiler instance
     Profiler<std::function<int()>> p{"profiler A label"};
     // mechanism instance & callback
-    PipeDynamic<messageSize, chunkSize> intance{dataset, "pipe instance"};
-    auto func = [&intance]() -> int { return intance.round_trip(); };
+    PipeDynamic<messageSize, chunkSize> instance{dataset, "pipe instance"};
+    auto func = [&instance]() -> int { return instance.round_trip(); };
     // run benchmark on callback & export results
     p.benchmark(func); // Note: benchmark logic should be in this function @ Profiuler.h
     p.exportResult();
@@ -50,13 +50,18 @@ int runTasks() {
   {
     constexpr size_t messageSize = Buffer<uint64_t>::_64K,
                      chunkSize = 1024 * 16;
+    constexpr Mode mode = Mode::one_direction; // Mode::one_direction or Mode::round_trip
     // use randomized dataset
     Buffer<uint64_t> dataset{messageSize};
     // profiler instance
     Profiler<std::function<int()>> p{"profiler A label"};
     // mechanism instance & callback
-    Socket<messageSize, chunkSize> intance{dataset, "pipe instance"};
-    auto func = [&intance]() -> int { return intance.one_direction(); };
+    Socket<messageSize, chunkSize, mode> instance{dataset, "pipe instance"};
+    auto func = [&instance]() -> int {
+      instance();
+      instance.cleanup();
+      return 0;
+    };
     // run benchmark on callback & export results
     p.benchmark(func); // Note: benchmark logic should be in this function @ Profiuler.h
     p.exportResult();
