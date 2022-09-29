@@ -13,7 +13,6 @@
 
 int runTasks() {
 
-  /*
   // EXAMPLE USAGE PIPE 1: for throughput (one_direction())
   {
     constexpr size_t messageSize = Buffer<uint64_t>::_64K,
@@ -44,7 +43,6 @@ int runTasks() {
     p.benchmark(func); // Note: benchmark logic should be in this function @ Profiuler.h
     p.exportResult();
   }
-  */
 
   // EXAMPLE USAGE SOCKET 1: for thoughput
   {
