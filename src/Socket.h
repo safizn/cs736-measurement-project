@@ -12,8 +12,9 @@
 #include <sys/un.h> // socket in Unix
 #include <cstring>
 
-#include "IPC.h"
 #include "utility.cpp"
+#include "IPC.h"
+#include "Buffer.h"
 
 using namespace std;
 
@@ -45,6 +46,7 @@ public:
       perror("fork");
       exit(EXIT_FAILURE);
     case 0:
+      sleep(1);
       goto CHILD;
     default:
       goto PARENT;
@@ -67,9 +69,11 @@ public:
   }
 
   virtual int one_direction() override {
+    return 0;
   }
 
   virtual int round_trip() override {
+    return 0;
   }
 
 private:
