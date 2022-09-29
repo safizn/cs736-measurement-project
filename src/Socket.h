@@ -102,18 +102,18 @@ public:
 
       p += chunkSize;
       remain -= written;
+      counter++;
 
-      { // testing
-        std::bitset<BYTE> e = *(p);
-        printf("[%u] written: %u bytes with # iterations: %u    Data: ", getpid(), written, counter);
-        cout << e << endl;
-      }
+      // { // testing
+      //   std::bitset<BYTE> e = *(p);
+      //   printf("[%u] written: %u bytes with # iterations: %u    Data: ", getpid(), written, counter);
+      //   cout << e << endl;
+      // }
     }
   }
 
     if (mode == Mode::one_direction)
-      goto ROUND_TRIP;
-    // return 0;
+      return 0;
     else
       goto ROUND_TRIP;
 
@@ -134,11 +134,11 @@ public:
       }
 
       counter++;
-      { // testing
-        std::bitset<BYTE> e = *((unsigned char *)tempBuffer);
-        printf("[%u] received: %u bytes with # iterations: %u   Data: ", getpid(), received, counter);
-        cout << e << endl;
-      }
+      // { // testing
+      //   std::bitset<BYTE> e = *((unsigned char *)tempBuffer);
+      //   printf("[%u] received: %u bytes with # iterations: %u   Data: ", getpid(), received, counter);
+      //   cout << e << endl;
+      // }
     } while (received > 0);
   }
 
@@ -182,7 +182,7 @@ private:
       exit(1);
     }
 
-    printf("SERVER: Socket listening...\n");
+    printf("SERVER[%u]: Socket listening...\n", getpid());
     client_fd = accept(this->sock, (struct sockaddr *)&client_addr, (socklen_t *)&len);
     if (client_fd == -1) {
       printf("SERVER: Accept error: %s\n", strerror(errno));
@@ -195,31 +195,31 @@ private:
 
   SINGLE_DIRECTION : // LISTEN TO CLIENT
   {
+    ssize_t remain{messageSize};
     ssize_t received{0};
     int counter{0};
     do {
       received = recv(client_fd, tempBuffer, chunkSize, 0);
-      if (received == -1) {
-        printf("SERVER: Error when receiving message: %s\n", strerror(errno));
-        close(this->sock);
-        close(client_fd);
-        exit(1);
-      } else {
-        // printf("SERVER: Server received message: %s.\n", tempBuffer);
-      }
+      // if (received == -1) {
+      //   printf("SERVER: Error when receiving message: %s\n", strerror(errno));
+      //   close(this->sock);
+      //   close(client_fd);
+      //   exit(1);
+      // }
 
-      { // testing
-        counter++;
-        std::bitset<BYTE> e = *((unsigned char *)tempBuffer);
-        printf("[%u] received: %u bytes with # iterations: %u    Data: ", getpid(), received, counter);
-        cout << e << endl;
-      }
-    } while (received > 0);
+      remain -= received;
+
+      // { // testing
+      //   counter++;
+      //   std::bitset<BYTE> e = *((unsigned char *)tempBuffer);
+      //   printf("[%u] received: %u bytes with # iterations: %u    Data: ", getpid(), received, counter);
+      //   cout << e << endl;
+      // }
+    } while (remain > 0);
   }
 
     if (mode == Mode::one_direction)
-      goto ROUND_TRIP;
-    // return;
+      return;
     else
       goto ROUND_TRIP;
 
@@ -242,11 +242,11 @@ private:
       p += chunkSize;
       remain -= written;
 
-      { // testing
-        std::bitset<BYTE> e = *(p);
-        printf("[%u] written: %u bytes with # iterations: %u   Data: ", getpid(), written, counter);
-        cout << e << endl;
-      }
+      // { // testing
+      //   std::bitset<BYTE> e = *(p);
+      //   printf("[%u] written: %u bytes with # iterations: %u   Data: ", getpid(), written, counter);
+      //   cout << e << endl;
+      // }
     }
   }
   }
@@ -273,7 +273,7 @@ private:
       close(this->sock);
       exit(1);
     }
-    printf("CLIENT: Connected to server.\n");
+    // printf("CLIENT[%u]: Connected to server.\n", getpid());
   }
 
   static void cleanupStatic() {
