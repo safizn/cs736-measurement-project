@@ -11,7 +11,7 @@
   - Modern internal pipe buffer size ranges from 16k to 64k. 
   - Linux let's you increase the size of the pipe buffer via the F_SETPIPE_SZ fcntl(2) (as a multiple of the page size and up to the max size defined in /proc/sys/fs/pipe-max-size for normal users).  pipe-max-size = 2^20 = 1048576
   - TESTED: max pipe write size = 2^16 = 65536 = 64K
-- Socket (TCP/IP)
+- Inet Socket (TCP/IP)
   - https://inet.omnetpp.org/docs/developers-guide/ch-sockets.html
   - https://www.softprayog.in/programming/network-socket-programming-using-tcp-in-c
   - https://www.youtube.com/watch?v=WDn-htpBlnU & https://www.youtube.com/watch?v=fmn-pRvNaho
@@ -19,10 +19,13 @@
   - https://biendltb.github.io/tech/inter-process-communication-ipc-in-cpp/
   - https://man7.org/linux/man-pages/man7/unix.7.html
   - Check Unix opened sockets "$ ss -s" 
+  - https://barsky.ca/marina/SR/c2018/lectures/9.sockets/08.01.Sockets.pdf
+  - https://smlfamily.github.io/Basis/inet-sock.html
+  - https://www.youtube.com/watch?v=8TGV4zcd9k4
 - Shared mem channel
   - https://www.youtube.com/watch?v=Yb6pc_OU5x8
   - https://www.youtube.com/watch?v=dJuYKfR8vec
-  - 
+  - INET socket example https://gist.github.com/jrelo/cc845e9c7ae002194faec6fcabc53c65
 
 # Resources: 
 - https://medium.com/swlh/reliable-performance-testing-in-c-1df7a3ba398

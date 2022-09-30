@@ -3,6 +3,9 @@
 #include <string>
 #include <iostream>
 
+enum class Mode { one_direction,
+                  round_trip };
+
 // interface of IPC mechanisms
 template <typename T>
 class IPC {

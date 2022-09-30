@@ -1,27 +1,22 @@
 #pragma once
 
 #include <bits/stdc++.h>
-#include <string>
-#include <iostream>
 #include <string.h>
-#include <errno.h>
-#include <unistd.h> // for fork()
-#include <stdio.h>  // for printf
-#include <stdlib.h> // for exit()
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/un.h> // socket in Unix
-#include <cstring>
-#include <cstdlib>
+#include <netinet/tcp.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <netdb.h>
 
 #include "utility.cpp"
 #include "IPC.h"
 #include "Buffer.h"
 
 using namespace std;
-
-// socket files will be created in current working directory
-#define SERVER_SOCK_PATH "unix_sock.server"
-#define CLIENT_SOCK_PATH "unix_sock.client"
 
 // workfow:
 // socket()
@@ -31,28 +26,14 @@ using namespace std;
 // accept()
 
 template <size_t messageSize = 4 /*bytes*/, size_t chunkSize = 1 /*bytes*/, Mode mode = Mode::one_direction, typename T = uint64_t>
-class Socket : public IPC<T> {
+class SocketInet : public IPC<T> {
 public:
-  Socket() = default;
-  Socket(Buffer<T> &data) : Socket(data) {}
-  Socket(Buffer<T> &data, std::string label = "") : dataBuffer(data), label(label) {
+  SocketInet() = default;
+  SocketInet(Buffer<T> &data) : SocketInet(data) {}
+  SocketInet(Buffer<T> &data, string ip_address = "127.0.0.1", int port = 5000, std::string label = "") : dataBuffer(data), ip_address(ip_address), port(port), label(label) {
     assert((messageSize % chunkSize) == 0);
 
     memset(&server_addr, 0, sizeof(server_addr));
-    memset(&client_addr, 0, sizeof(client_addr));
-
-    // bind to an address on FS for client to pick up
-    // bind address to FS to share with client
-    server_addr.sun_family = AF_UNIX;
-    strcpy(server_addr.sun_path, SERVER_SOCK_PATH);
-    client_addr.sun_family = AF_UNIX;
-    strcpy(client_addr.sun_path, CLIENT_SOCK_PATH);
-    // Bind client to FS address (Note: this binding could be skip if we want only send data to server without receiving)
-    // unlink file before bind
-    unlink(SERVER_SOCK_PATH);
-    unlink(CLIENT_SOCK_PATH);
-    // cleanup handler after exit
-    std::atexit(cleanupStatic);
 
     switch ((this->pid_child = fork())) {
     case -1:
@@ -72,7 +53,6 @@ public:
   }
 
   PARENT : {
-    sleep(1);
     createClient();
     // int status = 0;
     // while ((wait(&status)) > 0)
@@ -91,7 +71,7 @@ public:
     while (remain > 0) {
       ssize_t written = send(this->sock, p, chunkSize, 0);
       if (written == -1) {
-        printf("Client: Error when sending message to client.\n");
+        printf("Client: Error when sending message to client - %s\n", strerror(errno));
         close(this->sock);
         close(client_fd);
         exit(1);
@@ -157,15 +137,21 @@ public:
 
 private:
   void createServer() {
-    // open socket stream (SOCK_STREAM type)
-    this->sock = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (this->sock == -1) {
+    this->sock = socket(AF_INET, SOCK_STREAM, 0);
+
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = htons(INADDR_ANY);
+    server_addr.sin_port = htons(port);
+
+    int address_length = sizeof(server_addr);
+
+    if (this->sock <= 0) {
       printf("SERVER: Error when opening server socket.\n");
       exit(1);
     }
 
-    rc = bind(this->sock, (struct sockaddr *)&server_addr, len);
-    if (rc == -1) {
+    rc = bind(this->sock, (struct sockaddr *)&server_addr, sizeof(server_addr));
+    if (rc < 0) {
       printf("SERVER: Server bind error: %s\n", strerror(errno));
       close(this->sock);
       exit(1);
@@ -173,22 +159,22 @@ private:
 
     // accept connection
     rc = listen(this->sock, this->backlog);
-    if (rc == -1) {
+    if (rc < 0) {
       printf("SERVER: Listen error: %s\n", strerror(errno));
       close(this->sock);
       exit(1);
     }
 
-    printf("SERVER[%u]: Socket listening...\n", getpid());
-    client_fd = accept(this->sock, (struct sockaddr *)&client_addr, (socklen_t *)&len);
-    if (client_fd == -1) {
+    printf("SERVER[%u]: Socket listening on port: %u \n", getpid(), port);
+    client_fd = accept(this->sock, (struct sockaddr *)&this->sock, (socklen_t *)&address_length);
+    if (client_fd < 0) {
       printf("SERVER: Accept error: %s\n", strerror(errno));
       close(this->sock);
       close(client_fd);
       exit(1);
     }
-    printf("SERVER: Connected to client at: %s\n", client_addr.sun_path);
-    printf("SERVER: Wating for message...\n");
+
+    // printf("SERVER: Connected to client at file descriptor: %u\n", client_fd);
 
   SINGLE_DIRECTION : // LISTEN TO CLIENT
   {
@@ -196,6 +182,9 @@ private:
     ssize_t received{0};
     int counter{0};
     do {
+      // printf("SERVER: Wating for message...\n");
+      // received = read(client_fd, tempBuffer, chunkSize);
+      // int count = read(client_fd, tempBuffer, sizeof(chunkSize));
       received = recv(client_fd, tempBuffer, chunkSize, 0);
       if (received == -1) {
         printf("SERVER: Error when receiving message: %s\n", strerror(errno));
@@ -250,32 +239,40 @@ private:
 
   void createClient() {
     // open client socket (same as server)
-    this->sock = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (this->sock == -1) {
+    this->sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (this->sock < 0) {
       printf("CLIENT: Socket error: %s\n", strerror(errno));
       exit(1);
     }
 
-    rc = bind(this->sock, (struct sockaddr *)&client_addr, len);
-    if (rc == -1) {
-      printf("CLIENT: Client binding error. %s\n", strerror(errno));
+    /* get the address of the host */
+    // struct hostent *hptr = gethostbyname("127.0.0.1"); /* localhost: 127.0.0.1 */
+    // if (!hptr)
+    //   printf("gethostbyname", 1);    /* is hptr NULL? */
+    // if (hptr->h_addrtype != AF_INET) /* versus AF_LOCAL */
+    //   printf("bad address family", 1);
+
+    server_addr.sin_family = AF_INET;
+    // server_addr.sin_addr.s_addr = ((struct in_addr *)hptr->h_addr_list[0])->s_addr;
+    server_addr.sin_port = htons(port);
+
+    rc = inet_pton(AF_INET, ip_address.c_str(), &server_addr.sin_addr);
+    if (rc <= 0) {
+      printf("CLIENT: Client inet_pton error. %s\n", strerror(errno));
       close(this->sock);
       exit(1);
     }
 
     // connect to server address
-    rc = connect(this->sock, (struct sockaddr *)&server_addr, len);
-    if (rc == -1) {
+    printf("[Client] Connecting to server...\n");
+    rc = connect(this->sock, (struct sockaddr *)&server_addr, sizeof(server_addr));
+    if (rc < -1) {
       printf("CLIENT: Connect error. %s\n", strerror(errno));
       close(this->sock);
       exit(1);
     }
-    printf("CLIENT[%u]: Connected to server.\n", getpid());
-  }
-
-  static void cleanupStatic() {
-    remove(SERVER_SOCK_PATH);
-    remove(CLIENT_SOCK_PATH);
+    if (rc == 0)
+      printf("CLIENT[%u]: Connected to server.\n", getpid());
   }
 
 public:
@@ -283,12 +280,13 @@ public:
   pid_t pid_child{};          // process id
   Buffer<T> dataBuffer;       // random data to transfer
   char tempBuffer[chunkSize]; // receive buffer
-  int sock{};                 // client/server sockets
+  int sock{0};                // client/server sockets
   int rc{};                   // connection
-  struct sockaddr_un server_addr {};
-  struct sockaddr_un client_addr {};
+  struct sockaddr_in server_addr {};
   // maximum number of client connections in queue
-  const int backlog = 10;
+  const int backlog = 1;
   const int len{sizeof(sockaddr_un)}; // length of socket addresss.
-  int client_fd{};
+  int client_fd{0};
+  string ip_address{};
+  int port{};
 };
